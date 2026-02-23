@@ -117,35 +117,3 @@ JOIN employee e ON aa.emp_id = e.emp_id
 JOIN asset a ON aa.asset_id = a.asset_id;
 
 SELECT * FROM asset_assignment_view;
-
--- 6. ADVANCED QUERIES
-
--- GROUP BY
-SELECT asset_type, COUNT(*) AS total_assets
-FROM asset
-GROUP BY asset_type;
-
--- HAVING
-SELECT asset_type, COUNT(*) AS total_assets
-FROM asset
-GROUP BY asset_type
-HAVING COUNT(*) > 1;
-
--- Subquery
-SELECT emp_name
-FROM employee
-WHERE emp_id IN (
-    SELECT emp_id FROM asset_assignment
-);
-
-
--- 7. VIEW CREATION
-
-CREATE VIEW asset_assignment_view AS
-SELECT e.emp_name, a.asset_name, aa.assign_date, aa.return_date
-FROM asset_assignment aa
-JOIN employee e ON aa.emp_id = e.emp_id
-JOIN asset a ON aa.asset_id = a.asset_id;
-
--- Display View
-SELECT * FROM asset_assignment_view;
