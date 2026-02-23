@@ -1,20 +1,14 @@
--- OFFICE ASSET MANAGEMENT SYSTEM
-
--- 1. DROP & CREATE DATABASE
+-- 1. Create Database
 DROP DATABASE IF EXISTS office_asset_management;
 CREATE DATABASE office_asset_management;
 USE office_asset_management;
 
-
--- 2. TABLE CREATION
-
--- Department Table
+-- 2. Table Creation
 CREATE TABLE department (
     dept_id INT PRIMARY KEY AUTO_INCREMENT,
     dept_name VARCHAR(50) NOT NULL UNIQUE
 );
 
--- Employee Table
 CREATE TABLE employee (
     emp_id INT PRIMARY KEY AUTO_INCREMENT,
     emp_name VARCHAR(50) NOT NULL,
@@ -26,7 +20,6 @@ CREATE TABLE employee (
         ON UPDATE CASCADE
 );
 
--- Asset Table
 CREATE TABLE asset (
     asset_id INT PRIMARY KEY AUTO_INCREMENT,
     asset_name VARCHAR(50) NOT NULL,
@@ -36,7 +29,6 @@ CREATE TABLE asset (
         DEFAULT 'Available'
 );
 
--- Asset Assignment Table
 CREATE TABLE asset_assignment (
     assign_id INT PRIMARY KEY AUTO_INCREMENT,
     asset_id INT NOT NULL,
@@ -53,60 +45,78 @@ CREATE TABLE asset_assignment (
         ON UPDATE CASCADE
 );
 
-
--- 3. DATA INSERTION
-
--- Insert Departments
+-- 3. Data Insertion
 INSERT INTO department (dept_name) VALUES
 ('IT'),
 ('HR'),
 ('Finance');
 
--- Insert Employees
 INSERT INTO employee (emp_name, emp_email, dept_id) VALUES
 ('Rahul Sharma', 'rahul@office.com', 1),
 ('Aisha Khan', 'aisha@office.com', 2),
 ('Vikram Patel', 'vikram@office.com', 1);
 
--- Insert Assets
 INSERT INTO asset (asset_name, asset_type, purchase_date) VALUES
 ('Dell Laptop', 'Electronics', '2023-01-10'),
 ('HP Printer', 'Electronics', '2022-08-15'),
 ('Office Chair', 'Furniture', '2021-05-20');
 
+-- 4. Transaction - Asset Assignment
+START TRANSACTION;
 
--- 4. ASSET ASSIGNMENT
+SELECT asset_status
+FROM asset
+WHERE asset_id = 1
+FOR UPDATE;
 
--- Assign Assets
-INSERT INTO asset_assignment (asset_id, emp_id, assign_date, return_date)
-VALUES
-(1, 1, '2024-01-01', NULL),
-(2, 2, '2024-02-10', NULL);
-
--- Update Asset Status After Assignment
 UPDATE asset
 SET asset_status = 'Assigned'
-WHERE asset_id IN (1,2);
+WHERE asset_id = 1
+AND asset_status = 'Available';
 
+INSERT INTO asset_assignment (asset_id, emp_id, assign_date, return_date)
+VALUES (1, 1, CURDATE(), NULL);
 
--- 5. BASIC QUERIES
+COMMIT;
 
--- Available Assets
+-- 5. Basic Queries
 SELECT * FROM asset
 WHERE asset_status = 'Available';
 
--- Employee with Department
 SELECT e.emp_name, e.emp_email, d.dept_name
 FROM employee e
 JOIN department d
 ON e.dept_id = d.dept_id;
 
--- Asset Assignment Details
 SELECT a.asset_name, e.emp_name, aa.assign_date, aa.return_date
 FROM asset_assignment aa
 JOIN asset a ON aa.asset_id = a.asset_id
 JOIN employee e ON aa.emp_id = e.emp_id;
 
+-- 6. Advanced Queries
+SELECT asset_type, COUNT(*) AS total_assets
+FROM asset
+GROUP BY asset_type;
+
+SELECT asset_type, COUNT(*) AS total_assets
+FROM asset
+GROUP BY asset_type
+HAVING COUNT(*) > 1;
+
+SELECT emp_name
+FROM employee
+WHERE emp_id IN (
+    SELECT emp_id FROM asset_assignment
+);
+
+-- 7. View Creation
+CREATE OR REPLACE VIEW asset_assignment_view AS
+SELECT e.emp_name, a.asset_name, aa.assign_date, aa.return_date
+FROM asset_assignment aa
+JOIN employee e ON aa.emp_id = e.emp_id
+JOIN asset a ON aa.asset_id = a.asset_id;
+
+SELECT * FROM asset_assignment_view;
 
 -- 6. ADVANCED QUERIES
 
